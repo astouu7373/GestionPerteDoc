@@ -1,25 +1,30 @@
-HELP.md
+# ======================================
+# Java / Maven
+# ======================================
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+# ======================================
+# IDEs
+# ======================================
+# STS / Spring Tool Suite
 .apt_generated
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
@@ -29,5 +34,23 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
+# VS Code
 .vscode/
+
+# ======================================
+# Node / React frontend
+# ======================================
+gestion-perte-doc/node_modules/
+gestion-perte-doc/build/
+gestion-perte-doc/npm-debug.log*
+gestion-perte-doc/yarn-debug.log*
+gestion-perte-doc/yarn-error.log*
+gestion-perte-doc/package-lock.json
+gestion-perte-doc/yarn.lock
+
+# ======================================
+# Environment / Secrets
+# ======================================
+.env
+.env.local
+.env.*.local
