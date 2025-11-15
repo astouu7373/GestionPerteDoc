@@ -42,9 +42,9 @@ const Login = () => {
 
     try {
       const result = await login(formData.email, formData.password);
-      
+
       if (result) {
-        navigate('/');
+        navigate('/dashboard', { replace: true }); // Se connecter → dashboard
       } else {
         setError('Erreur de connexion');
       }
@@ -73,7 +73,7 @@ const Login = () => {
                 Connexion
               </Typography>
               <Typography color="textSecondary">
-                Système de Gestion des Pertes de Documents
+               SYGEPEDOF
               </Typography>
             </Box>
 
@@ -105,6 +105,8 @@ const Login = () => {
                 margin="normal"
                 required
               />
+
+              {/* Bouton Se connecter */}
               <Button
                 type="submit"
                 fullWidth
@@ -115,9 +117,21 @@ const Login = () => {
               >
                 {loading ? <CircularProgress size={24} /> : 'Se connecter'}
               </Button>
-			  <Box sx={{ textAlign: 'center', mt: 2 }}>
-			    <Link component={RouterLink} to="/forgot-password">Mot de passe oublié ?</Link>
-			  </Box>
+
+              {/* Bouton Retour à l'accueil */}
+              <Button
+                fullWidth
+                variant="outlined"
+                size="large"
+                onClick={() => navigate('/HomePage')}
+                sx={{ mt: 2 }}
+              >
+                Retour à l'accueil
+              </Button>
+
+              <Box sx={{ textAlign: 'center', mt: 2 }}>
+                <Link component={RouterLink} to="/forgot-password">Mot de passe oublié ?</Link>
+              </Box>
             </Box>
           </CardContent>
         </Card>

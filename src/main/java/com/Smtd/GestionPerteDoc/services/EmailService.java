@@ -45,4 +45,19 @@ public class EmailService {
 
         mailSender.send(message);
     }
+    public void envoyerEmailMotDePasseOublie(String destinataire, String resetToken) throws Exception {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setTo(destinataire);
+        helper.setSubject("Réinitialisation de votre mot de passe oublié");
+
+        String lienReset = "http://localhost:3000/reset-password/" + resetToken;
+
+        helper.setText("Bonjour,\n\n" +
+                       "Veuillez cliquer sur ce lien pour réinitialiser votre mot de passe : " + lienReset + "\n\n" +
+                       "Cordialement,\nPoste Central", false);
+
+        mailSender.send(message);
+    }
 }

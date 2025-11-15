@@ -96,11 +96,19 @@ export const declarationService = {
   },
   // Changer le statut
   async changerStatut(declarationId, statut) {
-    const response = await api.patch(
-      `/declarations/${declarationId}/statut?statut=${statut}`
-    );
-    return response.data;
+    console.log('Appel API changerStatut:', { declarationId, statut }); // <-- log frontend
+    try {
+      const response = await api.patch(
+        `/declarations/${declarationId}/statut?statut=${statut}`
+      );
+      console.log('Réponse API:', response.data); // <-- log réponse
+      return response.data;
+    } catch (err) {
+      console.error('Erreur API changerStatut:', err.response || err); // <-- log erreur
+      throw err;
+    }
   },
+
 
   // Obtenir les détails d'une déclaration
   async getDeclarationDetail(declarationId) {

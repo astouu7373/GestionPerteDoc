@@ -32,7 +32,7 @@ const Header = () => {
   const handleLogout = () => {
     logout();
     setAnchorEl(null); // Ferme le menu
-    navigate('/login');
+    navigate('/HomePage'); // ← redirection vers la HomePage
   };
 
   const handleProfile = () => {

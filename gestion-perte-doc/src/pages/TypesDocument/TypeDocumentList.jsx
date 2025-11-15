@@ -14,7 +14,8 @@ import {
   TextField,
   Grid,
   Alert,
-  Chip
+  Chip,
+  Snackbar // Ajout pour les notifications
 } from '@mui/material';
 import { Add, MoreVert, Edit, Delete } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
@@ -31,6 +32,7 @@ const TypeDocumentList = () => {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   const [formData, setFormData] = useState({
     libelleTypeDocument: '',
@@ -56,6 +58,10 @@ const TypeDocumentList = () => {
         queryClient.invalidateQueries('types-document');
         setCreateDialogOpen(false);
         resetForm();
+        showSnackbar('Type de document créé avec succès', 'success');
+      },
+      onError: (error) => {
+        showSnackbar(error.response?.data?.erreur || 'Erreur lors de la création', 'error');
       }
     }
   );
@@ -67,9 +73,10 @@ const TypeDocumentList = () => {
         queryClient.invalidateQueries('types-document');
         setEditDialogOpen(false);
         resetForm();
+        showSnackbar('Type de document modifié avec succès', 'success');
       },
       onError: (error) => {
-        console.error('Erreur modification:', error);
+        showSnackbar(error.response?.data?.erreur || 'Erreur lors de la modification', 'error');
       }
     }
   );
@@ -80,24 +87,38 @@ const TypeDocumentList = () => {
       onSuccess: () => {
         queryClient.invalidateQueries('types-document');
         setDeleteDialogOpen(false);
-        setSelectedType(null); // réinitialiser après suppression
+        setSelectedType(null);
+        showSnackbar('Type de document supprimé avec succès', 'success');
       },
       onError: (error) => {
-        console.error('Erreur suppression:', error);
+        // Gestion spécifique du message de suppression interdit
+        const errorMessage = error.response?.data?.message === "Vous ne pouvez pas supprimer un document" 
+          ? "Vous ne pouvez pas supprimer un document" 
+          : error.response?.data?.erreur || 'Erreur lors de la suppression';
+        
+        showSnackbar(errorMessage, 'error');
+        
+        // Fermer le dialogue si l'erreur est liée aux permissions
+        if (error.response?.data?.message === "Vous ne pouvez pas supprimer un document") {
+          setDeleteDialogOpen(false);
+        }
       }
     }
   );
 
+  // --- Fonction pour afficher les notifications ---
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
   // --- Handlers ---
   const handleMenuOpen = (event, typeDoc) => {
-    console.log('Menu ouvert pour typeDoc:', typeDoc);
     setAnchorEl(event.currentTarget);
-    setSelectedType(typeDoc); // garder selectedType jusqu'à action
+    setSelectedType(typeDoc);
   };
 
   const handleMenuClose = () => {
     setAnchorEl(null);
-    // Ne pas réinitialiser selectedType ici
   };
 
   const resetForm = () => {
@@ -266,11 +287,6 @@ const TypeDocumentList = () => {
               />
             </Grid>
           </Grid>
-          {createMutation.isError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {createMutation.error.response?.data?.erreur || 'Erreur lors de la création'}
-            </Alert>
-          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setCreateDialogOpen(false)}>Annuler</Button>
@@ -306,11 +322,6 @@ const TypeDocumentList = () => {
               />
             </Grid>
           </Grid>
-          {updateMutation.isError && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              Erreur: {updateMutation.error.response?.data?.erreur || updateMutation.error.message || 'Erreur lors de la modification'}
-            </Alert>
-          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEditDialogOpen(false)}>Annuler</Button>
@@ -333,6 +344,11 @@ const TypeDocumentList = () => {
           <Alert severity="warning" sx={{ mt: 2 }}>
             Cette action est irréversible. Les déclarations utilisant ce type seront affectées.
           </Alert>
+          {deleteMutation.isError && (
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {deleteMutation.error.response?.data?.erreur || 'Vous ne pouvez pas supprimer de document'}
+            </Alert>
+          )}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteDialogOpen(false)}>Annuler</Button>
@@ -346,6 +362,21 @@ const TypeDocumentList = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbar pour les notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          severity={snackbar.severity} 
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

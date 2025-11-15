@@ -11,6 +11,7 @@ import com.Smtd.GestionPerteDoc.entities.Utilisateur;
 import com.Smtd.GestionPerteDoc.enums.StatutDeclaration;
 import com.Smtd.GestionPerteDoc.repositories.DeclarationRepository;
 import com.Smtd.GestionPerteDoc.repositories.TypeDocumentRepository;
+import com.Smtd.GestionPerteDoc.repositories.UtilisateurRepository;
 import com.Smtd.GestionPerteDoc.security.services.CustomUserDetails;
 import com.Smtd.GestionPerteDoc.services.DeclarantService;
 import com.Smtd.GestionPerteDoc.services.DeclarationService;
@@ -49,7 +50,7 @@ public class DeclarationController {
     private final TypeDocumentRepository typeDocumentRepository;
     private final NumeroReferenceService numeroReferenceService;
     private final DeclarationRepository declarationRepository;
-
+    private final UtilisateurRepository utilisateurRepository;
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','SUPERVISEUR','AGENT')")
     public ResponseEntity<?> creerDeclaration(@RequestBody Declaration declaration,
@@ -292,14 +293,28 @@ public class DeclarationController {
     public ResponseEntity<?> changerStatut(
             @PathVariable Long id,
             @RequestParam StatutDeclaration statut,
-            @AuthenticationPrincipal Utilisateur utilisateurConnecte
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        try {
-            Declaration updated = declarationService.changerStatut(id, statut, utilisateurConnecte);
-            return ResponseEntity.ok(DTOMapper.toDeclarationDTO(updated));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        System.out.println("==== Appel du controller changerStatut ====");
+        
+        if (userDetails == null) {
+            System.out.println("CustomUserDetails est null !");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utilisateur non authentifié");
         }
+
+        // Récupération de l'entité Utilisateur à partir de CustomUserDetails
+        Utilisateur utilisateurConnecte = userDetails.getUtilisateur(); // si tu as une méthode getUtilisateur()
+
+        if (utilisateurConnecte == null) {
+            System.out.println("Utilisateur JPA est null !");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Utilisateur non trouvé dans la DB");
+        }
+
+        System.out.println("Utilisateur connecté : id=" + utilisateurConnecte.getId() + ", nom=" + utilisateurConnecte.getNom());
+
+        DeclarationDTO updatedDto = declarationService.changerStatut(id, statut, utilisateurConnecte);
+
+        return ResponseEntity.ok(updatedDto);
     }
 
 

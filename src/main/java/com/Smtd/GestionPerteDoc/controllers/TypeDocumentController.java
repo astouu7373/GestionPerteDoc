@@ -3,8 +3,12 @@ package com.Smtd.GestionPerteDoc.controllers;
 import com.Smtd.GestionPerteDoc.entities.TypeDocument;
 import com.Smtd.GestionPerteDoc.services.TypeDocumentService;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -54,7 +58,7 @@ public class TypeDocumentController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERVISEUR')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERVISEUR') or hasRole('AGENT')")
     public ResponseEntity<?> mettreAJourTypeDocument(@PathVariable Long id, @RequestBody TypeDocument typeDocument) {
         try {
             TypeDocument updated = typeDocumentService.mettreAJourTypeDocument(id, typeDocument);
@@ -65,8 +69,19 @@ public class TypeDocumentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'SUPERVISEUR', 'AGENT')")
     public ResponseEntity<?> supprimerTypeDocument(@PathVariable Long id) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        // Vérifier si l'utilisateur n'est pas ADMIN
+        boolean isNotAdmin = authentication.getAuthorities().stream()
+                .noneMatch(grantedAuthority -> grantedAuthority.getAuthority().equals("ROLE_ADMIN"));
+        
+        if (isNotAdmin) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "Vous ne pouvez pas supprimer un document"));
+        }
+        
         try {
             typeDocumentService.supprimerTypeDocument(id);
             return ResponseEntity.ok(Map.of("message", "Type de document supprimé avec succès"));

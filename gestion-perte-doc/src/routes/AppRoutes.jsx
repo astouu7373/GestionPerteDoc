@@ -6,6 +6,7 @@ import Layout from '../components/layout/Layout';
 
 // Pages publiques
 import Login from '../pages/Auth/Login';
+import HomePage from '../pages/HomePage';
 import Register from '../pages/Auth/Register';
 import ResetPassword from '../pages/Auth/ResetPassword';
 import ForgotPassword from '../pages/Auth/ForgotPassword';
@@ -66,6 +67,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       {/* Routes publiques */}
+	  <Route path="/HomePage" element={<HomePage />} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
       <Route path="/reset-password/:token" element={<PublicRoute><ResetPassword /></PublicRoute>} />

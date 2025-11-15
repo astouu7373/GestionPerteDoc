@@ -1,5 +1,7 @@
 package com.Smtd.GestionPerteDoc.services;
 
+import com.Smtd.GestionPerteDoc.dtos.DTOMapper;
+import com.Smtd.GestionPerteDoc.dtos.DeclarationDTO;
 import com.Smtd.GestionPerteDoc.dtos.PosteStatsDTO;
 import com.Smtd.GestionPerteDoc.entities.Declarant;
 import com.Smtd.GestionPerteDoc.entities.Declaration;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -122,6 +125,37 @@ public class DeclarationService {
 
         return saved;
     }
+    // === CHANGER STATUT ===
+    public DeclarationDTO changerStatut(Long declarationId, StatutDeclaration nouveauStatut, Utilisateur utilisateurConnecte) {
+        System.out.println("==== Dans le service changerStatut ====");
+
+        if (utilisateurConnecte == null) {
+            System.out.println("Utilisateur connecté est null !");
+            throw new RuntimeException("Utilisateur non authentifié");
+        }
+
+        System.out.println("Utilisateur connecté (safe) : id=" + utilisateurConnecte.getId() + ", nom=" + utilisateurConnecte.getNom());
+
+        Declaration declaration = declarationRepository.findById(declarationId)
+                .orElseThrow(() -> new RuntimeException("Déclaration non trouvée"));
+
+        declaration.setStatut(nouveauStatut);
+        declaration.setModifiePar(utilisateurConnecte);
+        declaration.setModifieLe(new Date());
+
+        declarationRepository.saveAndFlush(declaration);
+
+        DeclarationDTO dto = DTOMapper.toDeclarationDTO(declaration);
+
+        System.out.println("Après conversion en DTO :");
+        System.out.println("  modifieParNom = " + dto.getModifieParNom());
+        System.out.println("  modifieParPrenom = " + dto.getModifieParPrenom());
+        System.out.println("  modifieParMatricule = " + dto.getModifieParMatricule());
+
+        return dto;
+    }
+
+
 
     // === SUPPRESSION LOGIQUE ===
     public Declaration supprimerDeclaration(Long declarationId, Utilisateur utilisateurConnecte) {
@@ -245,33 +279,34 @@ public class DeclarationService {
     }
 
     public Declarant rechercherParIdentifiant(String email, String numNina, String numPassePort, String numCarteIdentite) {
+        // 1️⃣ Recherche dans Declarant par email
         if (email != null && !email.isBlank()) {
-            return declarantRepository.findByEmail(email).orElse(null);
+            Optional<Declarant> declarantParEmail = declarantRepository.findByEmail(email);
+            if (declarantParEmail.isPresent()) return declarantParEmail.get();
+
+            // 2️⃣ Si non trouvé, recherche dans Utilisateur
+            Optional<Utilisateur> utilisateurExistant = utilisateurRepository.findByEmail(email);
+            if (utilisateurExistant.isPresent()) {
+                // Convertir l'utilisateur en declarant temporaire
+                Declarant ancienDeclarant = new Declarant();
+                ancienDeclarant.setEmail(utilisateurExistant.get().getEmail());
+                ancienDeclarant.setNom(utilisateurExistant.get().getNom());
+                ancienDeclarant.setPrenom(utilisateurExistant.get().getPrenom());
+                return ancienDeclarant;
+            }
+
         } else if (numNina != null && !numNina.isBlank()) {
             return declarantRepository.findByNumNina(numNina).orElse(null);
         } else if (numPassePort != null && !numPassePort.isBlank()) {
             return declarantRepository.findByNumPassePort(numPassePort).orElse(null);
         } else if (numCarteIdentite != null && !numCarteIdentite.isBlank()) {
             return declarantRepository.findByNumCarteIdentite(numCarteIdentite).orElse(null);
-        } else {
-            return null;
         }
+
+        return null;
     }
- 
-    // === CHANGER STATUT ===
-    public Declaration changerStatut(Long declarationId, StatutDeclaration nouveauStatut, Utilisateur utilisateurConnecte) {
-        Declaration declaration = declarationRepository.findById(declarationId)
-                .orElseThrow(() -> new RuntimeException("Déclaration non trouvée"));
 
-        declaration.setStatut(nouveauStatut);
-        declaration.setModifiePar(utilisateurConnecte);
-        declaration.setModifieLe(new Date());
-
-        declarationRepository.save(declaration);
-        return declarationRepository.findByIdWithDetails(declaration.getId())
-                .orElseThrow(() -> new RuntimeException("Déclaration introuvable après mise à jour"));
-
-    }
+   
 
     // === PERMISSIONS ===
     public boolean verifierPermissionsCreation(Utilisateur utilisateur) {

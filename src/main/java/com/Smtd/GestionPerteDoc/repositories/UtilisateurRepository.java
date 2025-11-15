@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.Smtd.GestionPerteDoc.entities.Role;
+import com.Smtd.GestionPerteDoc.entities.TypeDocument;
 import com.Smtd.GestionPerteDoc.entities.Utilisateur;
 
 import java.util.List;
@@ -38,6 +39,7 @@ public interface UtilisateurRepository extends JpaRepository<Utilisateur, Long> 
 	List<Utilisateur> findByActifTrueAndIsDeletedFalse();
 	List<Utilisateur> findByIsDeletedTrue();
 	List<Utilisateur> findByActifFalseAndIsDeletedFalse();
+	Optional<TypeDocument> findByMatricule(String username);
    
 
 }

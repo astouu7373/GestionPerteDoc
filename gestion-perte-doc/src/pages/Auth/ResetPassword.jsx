@@ -25,7 +25,7 @@ const ResetPassword = () => {
       // Correction : passer deux arguments séparés
       await utilisateurService.resetMotDePasse(token, nouveauMotDePasse);
       setSuccess('Mot de passe réinitialisé avec succès ! Vous pouvez maintenant vous connecter.');
-      setTimeout(() => navigate('/login'), 2000);
+      setTimeout(() => navigate('/HomePage'), 2000);
     } catch (err) {
       setError(err.response?.data?.message || 'Erreur lors de la réinitialisation');
     }

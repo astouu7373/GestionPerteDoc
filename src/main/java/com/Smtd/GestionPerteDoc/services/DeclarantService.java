@@ -51,28 +51,45 @@ public class DeclarantService {
      */
     @Transactional
     public Declarant trouverOuCreerDeclarant(Declarant declarantData) {
-        // Normalisation
         normaliserChamps(declarantData);
 
-        //  Recherche par identifiants officiels (NINA, CNI, passeport)
+        // --- Recherche par identifiants officiels (NINA, CNI, passeport) ---
         Optional<Declarant> declarantExistant = trouverDeclarantParIdentifiants(declarantData);
         if (declarantExistant.isPresent()) return declarantExistant.get();
 
-        //  Recherche par email
+        // --- Recherche par email dans Declarant ---
         if (declarantData.getEmail() != null && !declarantData.getEmail().isBlank()) {
             Optional<Declarant> declarantParEmail = declarantRepository.findByEmail(declarantData.getEmail());
             if (declarantParEmail.isPresent()) return declarantParEmail.get();
+
+            // --- Si non trouvé, vérifier l’email dans Utilisateur ---
+            Optional<Utilisateur> utilisateurExistant = utilisateurRepository.findByEmail(declarantData.getEmail());
+            if (utilisateurExistant.isPresent()) {
+                // Si un utilisateur existe, on **exige de compléter les champs obligatoires**
+                if (declarantData.getNom() == null || declarantData.getNom().isBlank())
+                    throw new RuntimeException("Le nom est obligatoire pour créer un déclarant basé sur un utilisateur existant");
+                if (declarantData.getPrenom() == null || declarantData.getPrenom().isBlank())
+                    throw new RuntimeException("Le prénom est obligatoire pour créer un déclarant basé sur un utilisateur existant");
+                if (declarantData.getTelephone() == null || declarantData.getTelephone().isBlank())
+                    throw new RuntimeException("Le téléphone est obligatoire pour créer un déclarant basé sur un utilisateur existant");
+                if (declarantData.getAdresse() == null || declarantData.getAdresse().isBlank())
+                    throw new RuntimeException("L'adresse est obligatoire pour créer un déclarant basé sur un utilisateur existant");
+
+                // On peut maintenant créer le declarant complet
+                Declarant nouveauDeclarant = new Declarant();
+                copierChamps(nouveauDeclarant, declarantData);
+                return declarantRepository.save(nouveauDeclarant);
+            }
         }
 
-        //  Vérifications d'unicité avant création
+        // --- Vérifications d'unicité avant création d'un nouveau declarant ---
         if (declarantData.getEmail() != null) verifierEmailUniqueGlobal(declarantData);
         verifierIdentifiantsUniques(declarantData);
         if (declarantData.getTelephone() != null) verifierTelephoneUnique(declarantData.getTelephone(), declarantData.getId());
 
-        //  Création du nouveau déclarant
+        // --- Création d’un nouveau declarant ---
         Declarant nouveauDeclarant = new Declarant();
         copierChamps(nouveauDeclarant, declarantData);
-
         return declarantRepository.save(nouveauDeclarant);
     }
 
@@ -90,17 +107,41 @@ public class DeclarantService {
         Declarant existing = declarantRepository.findById(declarant.getId())
                 .orElseThrow(() -> new RuntimeException("Déclarant non trouvé"));
 
-        // Normalisation et vérifications d'unicité
+        // Normalisation
         normaliserChamps(declarant);
-        if (declarant.getEmail() != null) verifierEmailUniqueGlobal(declarant);
+
+        //  Vérification email uniquement si email modifié
+        if (declarant.getEmail() != null && !declarant.getEmail().equals(existing.getEmail())) {
+            Optional<Declarant> declarantAvecEmail = declarantRepository.findByEmail(declarant.getEmail());
+            if (declarantAvecEmail.isPresent() && !declarantAvecEmail.get().getId().equals(declarant.getId())) {
+                throw new RuntimeException("Un déclarant avec cet email existe déjà !");
+            }
+
+            Optional<Utilisateur> utilisateurAvecEmail = utilisateurRepository.findByEmail(declarant.getEmail());
+            if (utilisateurAvecEmail.isPresent()) {
+                // Email existe dans Utilisateur → on peut choisir de :
+                // 1️⃣ bloquer (stricte)
+                throw new RuntimeException("Un utilisateur avec cet email existe déjà !");
+                // OU
+                // 2️⃣ autoriser si tu veux juste créer un Déclarant “virtuel”
+            }
+        }
+
+        // Vérification identifiants et téléphone
         verifierIdentifiantsUniques(declarant);
         if (declarant.getTelephone() != null) verifierTelephoneUnique(declarant.getTelephone(), declarant.getId());
 
-        // Copie des champs vers l'objet existant
+        // Copie des champs
         copierChamps(existing, declarant);
+
+        // Valeurs par défaut pour champs obligatoires
+        if (existing.getAdresse() == null) existing.setAdresse("Non renseignée");
+        if (existing.getTelephone() == null) existing.setTelephone("00000000");
+        if (existing.getLieuNaissance() == null) existing.setLieuNaissance("Non renseigné");
 
         return declarantRepository.save(existing);
     }
+
 
     // ===================== SUPPRESSION =====================
 

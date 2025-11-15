@@ -23,7 +23,7 @@ const ForgotPassword = () => {
     try {
       await utilisateurService.forgotMotDePasse(email);
       setSuccess('Email envoyé ! Vérifiez votre boîte pour le lien de réinitialisation.');
-      setTimeout(() => navigate('/login'), 3000);
+      setTimeout(() => navigate('/HomePage'), 3000);
     } catch (err) {
       setError(err.response?.data?.erreur || err.message || 'Erreur lors de l’envoi de l’email');
     } finally {

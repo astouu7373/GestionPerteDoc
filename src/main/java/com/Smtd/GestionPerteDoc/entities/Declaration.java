@@ -54,7 +54,7 @@ public class Declaration {
 
     // TRACABILITÉ COMPLÈTE
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cree_par_id", nullable = false)
+    @JoinColumn(name = "cree_par_id")
     private Utilisateur creePar;
     
     @ManyToOne(fetch = FetchType.LAZY)

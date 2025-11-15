@@ -191,24 +191,24 @@ public class UtilisateurService {
 
     // ===================== ENVOYER LIEN RÉINITIALISATION =====================
     public void envoyerLienReinitialisation(String email) {
+        //  Vérifier que l'utilisateur existe
         Utilisateur utilisateur = utilisateurRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Aucun compte trouvé avec cet email"));
 
+        //  Générer le token et la date d'expiration
         String token = UUID.randomUUID().toString();
         utilisateur.setResetToken(token);
         utilisateur.setResetPasswordExpires(LocalDateTime.now().plusHours(48));
         utilisateurRepository.save(utilisateur);
 
+        //  Envoyer l'email avec le token
         try {
-            emailService.envoyerEmailMotDePasseTemporaire(
-                    utilisateur.getEmail(),
-                    null,
-                    token
-            );
+            emailService.envoyerEmailMotDePasseOublie(utilisateur.getEmail(), token);
         } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de l'envoi de l'email de réinitialisation");
+            throw new RuntimeException("Erreur lors de l'envoi de l'email de réinitialisation", e);
         }
     }
+
 
     // ===================== TRANSFERT RÔLE ADMIN =====================
     public Utilisateur transfererRoleAdmin(Long ancienAdminId, Long nouveauAdminId) {

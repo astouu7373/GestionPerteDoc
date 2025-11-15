@@ -62,7 +62,7 @@ public class SecurityConf {
                 .requestMatchers(HttpMethod.GET, "/api/types-document/**").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/types-document/**").hasAnyRole("ADMIN", "SUPERVISEUR", "AGENT")
                 .requestMatchers(HttpMethod.PUT, "/api/types-document/**").hasAnyRole("ADMIN", "SUPERVISEUR", "AGENT")
-                .requestMatchers(HttpMethod.DELETE, "/api/types-document/**").hasAnyRole("ADMIN", "SUPERVISEUR", "AGENT")
+                .requestMatchers(HttpMethod.DELETE, "/api/types-document/**").hasAnyRole("ADMIN")
 
                 // Routes declarations
                 .requestMatchers(HttpMethod.GET, "/api/declarations/**").authenticated()
