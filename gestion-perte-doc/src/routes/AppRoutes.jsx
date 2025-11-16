@@ -1,5 +1,4 @@
-// AppRoutes.jsx
-import React from 'react';
+import React from 'react'; 
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/layout/Layout';
@@ -28,88 +27,75 @@ import TypeDocumentList from '../pages/TypesDocument/TypeDocumentList';
 import Profile from '../pages/Utilisateurs/Profile';
 import GestionUtilisateurs from '../pages/Dashboard/admin/GestionUtilisateurs';
 
-// Composant pour les routes protégées
+// Routes protégées
 const ProtectedRoute = ({ children, requiredRoles }) => {
-  const { isAuthenticated, user, loading } = useAuth();
+  const { isAuthenticated, user, loading, initialized } = useAuth();
 
-  if (loading) return <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'100vh' }}>Chargement...</div>;
+  if (loading || !initialized) {
+    return <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'100vh' }}>Chargement...</div>;
+  }
 
-  if (!isAuthenticated) return <Navigate to="/login" />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   if (requiredRoles && !requiredRoles.some(role => user.roles?.includes(role))) {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
   return children;
 };
 
-// Composant pour les routes publiques
+// Routes publiques
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { loading, initialized } = useAuth();
 
-  if (loading) return <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'100vh' }}>Chargement...</div>;
-
-  if (isAuthenticated) return <Navigate to="/" />;
+  if (loading || !initialized) {
+    return <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'100vh' }}>Chargement...</div>;
+  }
 
   return children;
 };
 
-// Redirection vers le dashboard selon le rôle
+// Redirection selon rôle
 const DashboardRouter = () => {
   const { user } = useAuth();
+
   if (user?.roles?.includes('ROLE_ADMIN')) return <AdminDashboard />;
   if (user?.roles?.includes('ROLE_SUPERVISEUR')) return <SuperviseurDashboard />;
   if (user?.roles?.includes('ROLE_AGENT')) return <AgentDashboard />;
+
   return <AdminDashboard />; // par défaut
 };
 
-const AppRoutes = () => {
-  return (
-    <Routes>
-      {/* Routes publiques */}
-	  <Route path="/HomePage" element={<HomePage />} />
-      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-      <Route path="/reset-password/:token" element={<PublicRoute><ResetPassword /></PublicRoute>} />
-	  <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+const AppRoutes = () => (
+  <Routes>
+    {/* HomePage accessible à tous */}
+    <Route path="/" element={<HomePage />} />
+    <Route path="/dashboard" element={<ProtectedRoute><Layout><DashboardRouter /></Layout></ProtectedRoute>} />
 
+    {/* Routes publiques */}
+    <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+    <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+    <Route path="/reset-password/:token" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+    <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
 
-      {/* Routes protégées */}
-      <Route path="/" element={<ProtectedRoute><Layout><DashboardRouter /></Layout></ProtectedRoute>} />
+    {/* Routes protégées - Déclarations */}
+    <Route path="/declarations" element={<ProtectedRoute><Layout><DeclarationTabs /></Layout></ProtectedRoute>} />
+    <Route path="/declarations/nouvelle" element={<ProtectedRoute><Layout><DeclarationForm /></Layout></ProtectedRoute>} />
+    <Route path="/declarations/:id" element={<ProtectedRoute><Layout><DeclarationDetail /></Layout></ProtectedRoute>} />
+    <Route path="/declarations/:id/modifier" element={<ProtectedRoute><Layout><DeclarationForm /></Layout></ProtectedRoute>} />
+    <Route path="/recherche-declaration" element={<ProtectedRoute><Layout><DeclarationSearch /></Layout></ProtectedRoute>} />
 
-      {/* Déclarations */}
-      <Route path="/declarations" element={<ProtectedRoute><Layout><DeclarationTabs /></Layout></ProtectedRoute>} />
-      <Route path="/declarations/nouvelle" element={<ProtectedRoute><Layout><DeclarationForm /></Layout></ProtectedRoute>} />
-      <Route path="/declarations/:id" element={<ProtectedRoute><Layout><DeclarationDetail /></Layout></ProtectedRoute>} />
-      <Route path="/declarations/:id/modifier" element={<ProtectedRoute><Layout><DeclarationForm /></Layout></ProtectedRoute>} />
-      <Route path="/recherche-declaration" element={<ProtectedRoute><Layout><DeclarationSearch /></Layout></ProtectedRoute>} />
+    {/* Gestion utilisateurs (Admin ou Superviseur) */}
+    <Route path="/gestion-utilisateurs" element={<ProtectedRoute requiredRoles={['ROLE_ADMIN','ROLE_SUPERVISEUR']}><Layout><GestionUtilisateurs /></Layout></ProtectedRoute>} />
+    <Route path="/utilisateurs" element={<ProtectedRoute requiredRoles={['ROLE_ADMIN','ROLE_SUPERVISEUR']}><Layout><UserList /></Layout></ProtectedRoute>} />
 
-      {/* Gestion utilisateurs (Admin ou Superviseur) */}
-      <Route 
-        path="/gestion-utilisateurs" 
-        element={
-          <ProtectedRoute requiredRoles={['ROLE_ADMIN', 'ROLE_SUPERVISEUR']}>
-            <Layout><GestionUtilisateurs /></Layout>
-          </ProtectedRoute>
-        } 
-      />
-      <Route 
-        path="/utilisateurs" 
-        element={
-          <ProtectedRoute requiredRoles={['ROLE_ADMIN', 'ROLE_SUPERVISEUR']}>
-            <Layout><UserList /></Layout>
-          </ProtectedRoute>
-        } 
-      />
+    {/* Autres pages */}
+    <Route path="/types-document" element={<ProtectedRoute><Layout><TypeDocumentList /></Layout></ProtectedRoute>} />
+    <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
 
-      {/* Autres pages */}
-      <Route path="/types-document" element={<ProtectedRoute><Layout><TypeDocumentList /></Layout></ProtectedRoute>} />
-      <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
-
-      {/* Page 404 */}
-      <Route path="*" element={<Navigate to="/" />} />
-    </Routes>
-  );
-};
+    {/* Page 404 */}
+    <Route path="*" element={<Navigate to="/" replace />} />
+  </Routes>
+);
 
 export default AppRoutes;

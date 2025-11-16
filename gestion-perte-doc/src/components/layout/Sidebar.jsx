@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { usePermissions } from '../../hooks/usePermissions';
 
 const menuItems = [
-  { text: 'Tableau de bord', icon: <Dashboard />, path: '/' },
+  { text: 'Tableau de bord', icon: <Dashboard />, path: '/dashboard' },
   { text: 'Déclarations', icon: <Description />, path: '/declarations' },
   { text: 'Recherche Déclaration', icon: <Search />, path: '/recherche-declaration' },
   { text: 'Types Documents', icon: <Assignment />, path: '/types-document' },

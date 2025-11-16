@@ -44,7 +44,7 @@ const Login = () => {
       const result = await login(formData.email, formData.password);
 
       if (result) {
-        navigate('/dashboard', { replace: true }); // Se connecter → dashboard
+        navigate('/dashboard', { replace: true }); 
       } else {
         setError('Erreur de connexion');
       }

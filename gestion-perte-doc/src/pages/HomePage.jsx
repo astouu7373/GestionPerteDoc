@@ -28,40 +28,24 @@ const HomePage = () => {
         textAlign: 'center',
       }}
     >
-      {/* Logo */}
       <Box sx={{ position: 'absolute', top: 20, left: 20 }}>
         <img src={Logo} alt="Logo" style={{ height: 60 }} />
       </Box>
 
-      {/* Texte principal sur image */}
       <Box
         sx={{
           p: 3,
-          backgroundColor: 'rgba(0, 0, 0, 0.4)', // voile léger derrière texte seulement
+          backgroundColor: 'rgba(0, 0, 0, 0.4)',
           borderRadius: 2,
         }}
       >
-        <Typography
-          variant="h3"
-          gutterBottom
-          sx={{ fontWeight: 'bold', textShadow: '2px 2px 6px rgba(0,0,0,0.7)' }}
-        >
+        <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', textShadow: '2px 2px 6px rgba(0,0,0,0.7)' }}>
           Bienvenue dans le Système de Gestion de Perte de Documents Officiels
-		  
         </Typography>
-		<Typography
-		          variant="h3"
-		          gutterBottom
-		          sx={{ fontWeight: 'bold', textShadow: '2px 2px 6px rgba(0,0,0,0.7)' }}
-		        >
-		                SYGEPEDOF
-				  
-		        </Typography>
-        <Typography
-          variant="h6"
-          gutterBottom
-          sx={{ mb: 4, textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}
-        >
+        <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold', textShadow: '2px 2px 6px rgba(0,0,0,0.7)' }}>
+          SYGEPEDOF
+        </Typography>
+        <Typography variant="h6" gutterBottom sx={{ mb: 4, textShadow: '1px 1px 4px rgba(0,0,0,0.7)' }}>
           Veuillez vous connecter pour accéder aux fonctionnalités
         </Typography>
         <Button
