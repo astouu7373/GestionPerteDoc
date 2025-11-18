@@ -126,6 +126,7 @@ public class DeclarationService {
         return saved;
     }
     // === CHANGER STATUT ===
+    @Transactional
     public DeclarationDTO changerStatut(Long declarationId, StatutDeclaration nouveauStatut, Utilisateur utilisateurConnecte) {
         System.out.println("==== Dans le service changerStatut ====");
 
@@ -145,6 +146,19 @@ public class DeclarationService {
 
         declarationRepository.saveAndFlush(declaration);
 
+        // Envoi du mail si le statut devient VALIDEE
+        if (nouveauStatut == StatutDeclaration.VALIDEE) {
+            try {
+                String emailDestinataire = declaration.getDeclarant().getEmail();
+                String numeroReference = declaration.getNumeroReference();
+                emailService.envoyerEmailDeclarationValidee(emailDestinataire, numeroReference);
+                System.out.println("Email de déclaration validée envoyé à : " + emailDestinataire);
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.err.println("Erreur lors de l'envoi de l'email pour la déclaration validée");
+            }
+        }
+
         DeclarationDTO dto = DTOMapper.toDeclarationDTO(declaration);
 
         System.out.println("Après conversion en DTO :");
@@ -154,8 +168,6 @@ public class DeclarationService {
 
         return dto;
     }
-
-
 
     // === SUPPRESSION LOGIQUE ===
     public Declaration supprimerDeclaration(Long declarationId, Utilisateur utilisateurConnecte) {

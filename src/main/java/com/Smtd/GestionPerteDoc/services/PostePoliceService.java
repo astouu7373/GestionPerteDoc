@@ -27,7 +27,7 @@ public class PostePoliceService {
             }
 
             // Générer le code unique temporaire
-            String tempCode = "POSTE-TEMP-" + System.currentTimeMillis();
+            String tempCode = "POSTE-a" + System.currentTimeMillis();
             postePolice.setCodeUnique(tempCode);
 
             // Sauvegarder pour obtenir l'ID

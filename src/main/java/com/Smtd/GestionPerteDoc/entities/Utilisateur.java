@@ -63,7 +63,7 @@ public class Utilisateur {
     )
     private Set<Role> roles = new HashSet<>();
 
-    @OneToMany(mappedBy = "utilisateur", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "utilisateur", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Declaration> declarations;
 

@@ -79,8 +79,8 @@ const GestionUtilisateurs = () => {
     }
   );
 
-  const supprimerDefinitifMutation = useMutation(
-    id => utilisateurService.supprimerUtilisateurDefinitif(id),
+  const supprimerSoftMutation = useMutation(
+    id => utilisateurService.supprimerUtilisateurSoft(id),
     {
       onSuccess: (id) => {
         const actifs = queryClient.getQueryData(['utilisateurs', 'actifs']) || [];
@@ -99,6 +99,26 @@ const GestionUtilisateurs = () => {
       onError: (err) => setError(handleApiError(err))
     }
   );
+  const supprimerDefinitifMutation = useMutation(
+      id => utilisateurService.supprimerUtilisateurDefinitif(id),
+      {
+        onSuccess: (id) => {
+          const actifs = queryClient.getQueryData(['utilisateurs', 'actifs']) || [];
+          const inactifs = queryClient.getQueryData(['utilisateurs', 'inactifs']) || [];
+          const supprimes = queryClient.getQueryData(['utilisateurs', 'supprimes']) || [];
+
+          let utilisateur = actifs.find(u => u.id === id) || inactifs.find(u => u.id === id);
+          if (utilisateur) {
+            queryClient.setQueryData(['utilisateurs', 'actifs'], actifs.filter(u => u.id !== id));
+            queryClient.setQueryData(['utilisateurs', 'inactifs'], inactifs.filter(u => u.id !== id));
+            queryClient.setQueryData(['utilisateurs', 'supprimes'], [...supprimes, utilisateur]);
+          }
+
+          setSuccess('Utilisateur supprimé avec succès ');
+        },
+        onError: (err) => setError(handleApiError(err))
+      }
+    );
 
   const restaurerMutation = useMutation(
     ({ id, roleIds }) => utilisateurService.restaurerUtilisateur(id, roleIds),
@@ -292,10 +312,10 @@ const GestionUtilisateurs = () => {
 			                size="small"
 			                color="error"
 			                variant="outlined"
-			                disabled={u.id === user.id || supprimerDefinitifMutation.isLoading}
-			                onClick={() => supprimerDefinitifMutation.mutate(u.id)}
+			                disabled={u.id === user.id || supprimerSoftMutation.isLoading}
+			                onClick={() => supprimerSoftMutation.mutate(u.id)}
 			              >
-			                {supprimerDefinitifMutation.isLoading ? 'Suppression...' : 'Supprimer'}
+			                {supprimerSoftMutation.isLoading ? 'Suppression...' : 'Supprimer'}
 			              </Button>
 			            </Stack>
 			          )}
@@ -348,26 +368,41 @@ const GestionUtilisateurs = () => {
         </Grid>
 
         {/* Comptes Supprimés */}
-        <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>Comptes Supprimés</Typography>
-              <List>
-                {comptesSupprimes?.map(u => (
-                  <ListItem key={u.id} sx={{ flexDirection: 'column', alignItems: 'flex-start', mb: 1, borderBottom: '1px solid #eee', pb: 1 }}>
-                    <Typography sx={{ fontWeight: 'bold', mb: 1 }}>{u.nom} {u.prenom}</Typography>
-                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
-                      {u.roles.map((role, index) => <Chip key={`${u.id}-${role.id ?? index}`} label={role.libelle} size="small" color="default" />)}
-                    </Stack>
-                    <Button size="small" color="success" variant="outlined" onClick={() => restaurerMutation.mutate({ id: u.id, roleIds: [3] })}>
-                      Restaurer
-                    </Button>
-                  </ListItem>
-                ))}
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
+		<Grid item xs={12} md={4}>
+		  <Card>
+		    <CardContent>
+		      <Typography variant="h6" gutterBottom>Comptes Supprimés</Typography>
+		      <List>
+		        {comptesSupprimes?.map(u => (
+		          <ListItem key={u.id} sx={{ flexDirection: 'column', alignItems: 'flex-start', mb: 1, borderBottom: '1px solid #eee', pb: 1 }}>
+		            <Typography sx={{ fontWeight: 'bold', mb: 1 }}>{u.nom} {u.prenom}</Typography>
+		            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', mb: 1 }}>
+		              {u.roles.map((role, index) => <Chip key={`${u.id}-${role.id ?? index}`} label={role.libelle} size="small" color="default" />)}
+		            </Stack>
+		            <Stack direction="row" spacing={1}>
+		              <Button
+		                size="small"
+		                color="success"
+		                variant="outlined"
+		                onClick={() => restaurerMutation.mutate({ id: u.id, roleIds: [3] })}
+		              >
+		                Restaurer
+		              </Button>
+		              <Button
+		                size="small"
+		                color="error"
+		                variant="outlined"
+		                onClick={() => supprimerDefinitifMutation.mutate(u.id)}
+		              >
+		                Supprimer
+		              </Button>
+		            </Stack>
+		          </ListItem>
+		        ))}
+		      </List>
+		    </CardContent>
+		  </Card>
+		</Grid>
       </Grid>
     </Box>
   );

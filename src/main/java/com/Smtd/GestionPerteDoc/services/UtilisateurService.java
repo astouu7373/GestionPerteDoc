@@ -7,6 +7,7 @@ import com.Smtd.GestionPerteDoc.entities.Declaration;
 import com.Smtd.GestionPerteDoc.entities.PostePolice;
 import com.Smtd.GestionPerteDoc.entities.Role;
 import com.Smtd.GestionPerteDoc.entities.Utilisateur;
+import com.Smtd.GestionPerteDoc.repositories.DeclarationRepository;
 import com.Smtd.GestionPerteDoc.repositories.PostePoliceRepository;
 import com.Smtd.GestionPerteDoc.repositories.RoleRepository;
 import com.Smtd.GestionPerteDoc.repositories.UtilisateurRepository;
@@ -35,6 +36,7 @@ public class UtilisateurService {
     private final PostePoliceRepository postePoliceRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final DeclarationRepository declarationRepository;
 
     // ===================== MOT DE PASSE TEMPORAIRE =====================
     public String genererMotDePasseTemporaire() {
@@ -336,6 +338,24 @@ public class UtilisateurService {
 
         utilisateurRepository.save(utilisateur);
     }
+    @Transactional
+    public void supprimerUtilisateurDefinitif(Long utilisateurId) {
+        // Récupérer l'utilisateur
+        Utilisateur utilisateur = utilisateurRepository.findById(utilisateurId)
+                .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
+
+        // Vérifications comme avant
+        Utilisateur actuel = getUtilisateurCourant();
+        if (utilisateur.getId().equals(actuel.getId())) {
+            throw new RuntimeException("Vous ne pouvez pas supprimer votre propre compte !");
+        }
+
+        // Supprimer les déclarations liées
+        declarationRepository.deleteByUtilisateurId(utilisateur.getId());
+
+        // Maintenant, supprimer l'utilisateur
+        utilisateurRepository.delete(utilisateur);
+    }
 
     public Utilisateur findByEmail(String email) {
         return utilisateurRepository.findByEmail(email)
@@ -446,9 +466,7 @@ public class UtilisateurService {
         // Retourner le DTO via le mapper
         return DTOMapper.toUtilisateurDTO(utilisateur);
     }
-
-
-
+   
     public Utilisateur getUtilisateurCourant() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {

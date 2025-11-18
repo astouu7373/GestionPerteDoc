@@ -112,9 +112,9 @@ public class UtilisateurController {
     }
 
  // ===================== SUPPRESSION =====================
-    @DeleteMapping("/{id}/definitif")
+    @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERVISEUR')")
-    public ResponseEntity<?> supprimerUtilisateurDefinitif(@PathVariable Long id) {
+    public ResponseEntity<?> supprimerUtilisateurSoft(@PathVariable Long id) {
         try {
             Utilisateur actuel = utilisateurService.getUtilisateurCourant();
             Utilisateur cible = utilisateurService.trouverParId(id);
@@ -240,5 +240,11 @@ public class UtilisateurController {
     public static class RestaurerRequest {
         public List<Long> roleIds;
     }
+    @DeleteMapping("/{id}/definitif")
+    public ResponseEntity<?> supprimerUtilisateurDefinitif(@PathVariable Long id) {
+        utilisateurService.supprimerUtilisateurDefinitif(id);
+        return ResponseEntity.ok(Map.of("message", "Utilisateur supprimé définitivement"));
+    }
+
 
 }

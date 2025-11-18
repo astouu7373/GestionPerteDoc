@@ -50,7 +50,6 @@ public class DeclarationController {
     private final TypeDocumentRepository typeDocumentRepository;
     private final NumeroReferenceService numeroReferenceService;
     private final DeclarationRepository declarationRepository;
-    private final UtilisateurRepository utilisateurRepository;
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN','SUPERVISEUR','AGENT')")
     public ResponseEntity<?> creerDeclaration(@RequestBody Declaration declaration,

@@ -57,9 +57,13 @@ export const utilisateurService = {
   },
 
   // ===================== SUPPRESSION (SOFT DELETE) =====================
-  async supprimerUtilisateurDefinitif(id) {
-    const response = await api.delete(`/utilisateurs/${id}/definitif`);
+  async supprimerUtilisateurSoft(id) {
+    const response = await api.delete(`/utilisateurs/${id}`);
     return response.data;
+  },
+  async supprimerUtilisateurDefinitif(id) {
+      const response = await api.delete(`/utilisateurs/${id}/definitif`);
+      return response.data;
   },
 
   // ===================== LISTING =====================

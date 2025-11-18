@@ -1,7 +1,8 @@
-import React from 'react'; 
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/layout/Layout';
+import { systemService } from '../services/systemService';
 
 // Pages publiques
 import Login from '../pages/Auth/Login';
@@ -26,6 +27,9 @@ import UserList from '../pages/Utilisateurs/UserList';
 import TypeDocumentList from '../pages/TypesDocument/TypeDocumentList';
 import Profile from '../pages/Utilisateurs/Profile';
 import GestionUtilisateurs from '../pages/Dashboard/admin/GestionUtilisateurs';
+
+// Setup
+import SetupSystem from '../pages/SetupSystem';
 
 // Routes protégées
 const ProtectedRoute = ({ children, requiredRoles }) => {
@@ -66,36 +70,67 @@ const DashboardRouter = () => {
   return <AdminDashboard />; // par défaut
 };
 
-const AppRoutes = () => (
-  <Routes>
-    {/* HomePage accessible à tous */}
-    <Route path="/" element={<HomePage />} />
-    <Route path="/dashboard" element={<ProtectedRoute><Layout><DashboardRouter /></Layout></ProtectedRoute>} />
+const AppRoutes = () => {
+  const [systemInitialized, setSystemInitialized] = useState(null);
 
-    {/* Routes publiques */}
-    <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-    <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-    <Route path="/reset-password/:token" element={<PublicRoute><ResetPassword /></PublicRoute>} />
-    <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+  // Vérifier si le système est initialisé avant de rendre les routes
+  useEffect(() => {
+    const checkSystem = async () => {
+      try {
+        const result = await systemService.etatSysteme();
+        setSystemInitialized(result.initialised);
+      } catch (err) {
+        console.error(err);
+        setSystemInitialized(true); // pour éviter blocage si erreur
+      }
+    };
+    checkSystem();
+  }, []);
 
-    {/* Routes protégées - Déclarations */}
-    <Route path="/declarations" element={<ProtectedRoute><Layout><DeclarationTabs /></Layout></ProtectedRoute>} />
-    <Route path="/declarations/nouvelle" element={<ProtectedRoute><Layout><DeclarationForm /></Layout></ProtectedRoute>} />
-    <Route path="/declarations/:id" element={<ProtectedRoute><Layout><DeclarationDetail /></Layout></ProtectedRoute>} />
-    <Route path="/declarations/:id/modifier" element={<ProtectedRoute><Layout><DeclarationForm /></Layout></ProtectedRoute>} />
-    <Route path="/recherche-declaration" element={<ProtectedRoute><Layout><DeclarationSearch /></Layout></ProtectedRoute>} />
+  if (systemInitialized === null) {
+    return <div style={{ display:'flex', justifyContent:'center', alignItems:'center', height:'100vh' }}>Chargement du système...</div>;
+  }
 
-    {/* Gestion utilisateurs (Admin ou Superviseur) */}
-    <Route path="/gestion-utilisateurs" element={<ProtectedRoute requiredRoles={['ROLE_ADMIN','ROLE_SUPERVISEUR']}><Layout><GestionUtilisateurs /></Layout></ProtectedRoute>} />
-    <Route path="/utilisateurs" element={<ProtectedRoute requiredRoles={['ROLE_ADMIN','ROLE_SUPERVISEUR']}><Layout><UserList /></Layout></ProtectedRoute>} />
+  // Si système non initialisé, rediriger toutes les routes vers Setup
+  if (!systemInitialized) {
+    return (
+      <Routes>
+        <Route path="*" element={<SetupSystem />} />
+      </Routes>
+    );
+  }
 
-    {/* Autres pages */}
-    <Route path="/types-document" element={<ProtectedRoute><Layout><TypeDocumentList /></Layout></ProtectedRoute>} />
-    <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
+  return (
+    <Routes>
+      {/* HomePage accessible à tous */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/dashboard" element={<ProtectedRoute><Layout><DashboardRouter /></Layout></ProtectedRoute>} />
 
-    {/* Page 404 */}
-    <Route path="*" element={<Navigate to="/" replace />} />
-  </Routes>
-);
+      {/* Routes publiques */}
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+      <Route path="/reset-password/:token" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+      <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+
+      {/* Routes protégées - Déclarations */}
+      <Route path="/declarations" element={<ProtectedRoute><Layout><DeclarationTabs /></Layout></ProtectedRoute>} />
+      <Route path="/declarations/nouvelle" element={<ProtectedRoute><Layout><DeclarationForm /></Layout></ProtectedRoute>} />
+      <Route path="/declarations/:id" element={<ProtectedRoute><Layout><DeclarationDetail /></Layout></ProtectedRoute>} />
+      <Route path="/declarations/:id/modifier" element={<ProtectedRoute><Layout><DeclarationForm /></Layout></ProtectedRoute>} />
+      <Route path="/recherche-declaration" element={<ProtectedRoute><Layout><DeclarationSearch /></Layout></ProtectedRoute>} />
+
+      {/* Gestion utilisateurs (Admin ou Superviseur) */}
+      <Route path="/gestion-utilisateurs" element={<ProtectedRoute requiredRoles={['ROLE_ADMIN','ROLE_SUPERVISEUR']}><Layout><GestionUtilisateurs /></Layout></ProtectedRoute>} />
+      <Route path="/utilisateurs" element={<ProtectedRoute requiredRoles={['ROLE_ADMIN','ROLE_SUPERVISEUR']}><Layout><UserList /></Layout></ProtectedRoute>} />
+
+      {/* Autres pages */}
+      <Route path="/types-document" element={<ProtectedRoute><Layout><TypeDocumentList /></Layout></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
+
+      {/* Page 404 */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
 
 export default AppRoutes;

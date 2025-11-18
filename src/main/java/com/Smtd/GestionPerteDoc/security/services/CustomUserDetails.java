@@ -26,7 +26,6 @@ public class CustomUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return utilisateur.getRoles().stream()
                 .map(role -> {
-                    // Si ton rôle ne commence pas par ROLE_, on le préfixe
                     String libelle = role.getLibelle();
                     if (!libelle.startsWith("ROLE_")) {
                         libelle = "ROLE_" + libelle;

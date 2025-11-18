@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/authService';
+import { systemService } from '../services/systemService';
 
 const AuthContext = createContext();
 
@@ -12,36 +13,35 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
+  const [initialized, setInitialized] = useState(null);
 
-  // Toujours démarrer déconnecté
+  // Au démarrage : vérifier auth + initialisation système
   useEffect(() => {
-    setUser(null);  
-    setLoading(false);
-    setInitialized(true);
+    const checkSystem = async () => {
+      try {
+        const systemState = await systemService.etatSysteme();
+        setInitialized(systemState.initialised);
+      } catch (err) {
+        console.error('Erreur vérification système', err);
+        setInitialized(false);
+      }
+      setUser(null);
+      setLoading(false);
+    };
+
+    checkSystem();
   }, []);
 
   const login = async (email, password) => {
+    setLoading(true);
     try {
-      setLoading(true);
       const response = await authService.login(email, password);
       if (response.token && response.user) {
         localStorage.setItem('authToken', response.token);
-
-        const userWithDefaults = {
-          matricule: 'N/A',
-          postePoliceNom: 'Poste principal',
-          actif: true,
-          ...response.user
-        };
-
-        localStorage.setItem('userData', JSON.stringify(userWithDefaults));
-        setUser(userWithDefaults);
+        localStorage.setItem('userData', JSON.stringify(response.user));
+        setUser(response.user);
         return true;
       }
-      return false;
-    } catch (err) {
-      console.error(err);
       return false;
     } finally {
       setLoading(false);
